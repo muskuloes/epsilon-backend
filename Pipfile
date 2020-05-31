@@ -9,6 +9,7 @@ yapf = "*"
 [packages]
 flask = "*"
 flask-restful = "*"
+flask-pymongo = "*"
 
 [requires]
 python_version = "3.6"
