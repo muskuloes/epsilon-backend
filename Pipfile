@@ -11,6 +11,8 @@ flask = "*"
 flask-restful = "*"
 flask-pymongo = "*"
 flask-cors = "*"
+flask-socketio = "*"
+eventlet = "*"
 
 [requires]
 python_version = "3.6"

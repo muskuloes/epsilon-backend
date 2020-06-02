@@ -3,7 +3,9 @@ import uuid
 
 from flask import Flask, request
 from flask_restful import Resource, Api
+from flask_socketio import SocketIO, emit
 from flask_pymongo import PyMongo
+
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -12,6 +14,7 @@ app.config["MONGO_URI"] = os.getenv(
 )
 CORS(app)
 mongo = PyMongo(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 api = Api(app)
 
@@ -25,6 +28,7 @@ class Upload(Resource):
     def get(self, filename):
         return mongo.send_file(filename)
 
+    # TODO: return predicted images classes and attributes together with images url.
     def post(self, **kwargs):
         files = request.files
         filenames = []
@@ -34,6 +38,7 @@ class Upload(Resource):
             filenames.append(filename)
             mongo.save_file(filename, file)
 
+        socketio.emit("updated files", filenames, broadcast=True)
         return {"filenames": filenames}
 
 
@@ -41,4 +46,4 @@ api.add_resource(HelloWorld, "/")
 api.add_resource(Upload, "/upload", "/upload/<string:filename>")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
