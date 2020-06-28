@@ -47,3 +47,4 @@ model.load_weights(model_path, by_name=True)
 
 original_image = cv2.imread("test.jpg")
 results = model.detect([original_image])
+print(model.metrics_names)

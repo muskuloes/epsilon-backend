@@ -31,18 +31,28 @@ class Upload(Resource):
     # TODO: return predicted images classes and attributes together with images url.
     def post(self, **kwargs):
         files = request.files
-        filenames = []
-        for param, file in files.items(multi=True):
-            file_extension = file.filename.split(".")[-1]
-            filename = "{}.{}".format(uuid.uuid4(), file_extension)
-            filenames.append(filename)
+        data = []
+        for _, file in files.items(multi=True):
+            filename = "{}".format(uuid.uuid4())
             mongo.save_file(filename, file)
+            # build image data from tensorflow model
+            imageData = {"name": filename}
+            id = mongo.db.imageData.insert_one(imageData).inserted_id
+            data.append({"id": str(id), "name": filename})
 
-        socketio.emit("updated files", filenames, broadcast=True)
-        return {"filenames": filenames}
+        socketio.emit("updated files", data, broadcast=True)
+        return {"data": data}
 
 
-api.add_resource(HelloWorld, "/")
+class Connect(Resource):
+    def get(self):
+        data = []
+        for item in mongo.db.imageData.find():
+            data.append({"id": str(item.get("_id")), "name": item.get("name")})
+        return {"data": data}
+
+
+api.add_resource(Connect, "/")
 api.add_resource(Upload, "/upload", "/upload/<string:filename>")
 
 if __name__ == "__main__":
