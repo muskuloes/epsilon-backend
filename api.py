@@ -19,7 +19,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 api = Api(app)
 
 
-class HelloWorld(Resource):
+class Test(Resource):
     def get(self):
         return {"Team": "Unicorn"}
 
@@ -54,6 +54,8 @@ class Connect(Resource):
 
 api.add_resource(Connect, "/")
 api.add_resource(Upload, "/upload", "/upload/<string:filename>")
+
+api.add_resource(Test, "/test")
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
