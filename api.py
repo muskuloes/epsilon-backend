@@ -16,6 +16,7 @@ CORS(app)
 mongo = PyMongo(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+port = os.getenv("PORT", default=5000)
 api = Api(app)
 
 
@@ -57,4 +58,4 @@ api.add_resource(Upload, "/upload", "/upload/<string:filename>")
 api.add_resource(Test, "/test")
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", debug=True)
+    socketio.run(app, host="0.0.0.0", port=port, debug=True)
