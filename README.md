@@ -27,7 +27,7 @@ python api.py
 docker build -t api .
 docker network create unicorn
 docker run --name mongodb --network unicorn -p 27017:27017 -d mongo
-docker run --name api --network unicorn --env MONGO_URI=mongodb://mongodb:27017/hca -p 5000:5000 api:latest
+docker run --name api --network unicorn --env MONGODB_URI=mongodb://mongodb:27017/hca -p 5000:5000 api:latest
 ```
 
 - Test
