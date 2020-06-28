@@ -54,7 +54,6 @@ class Connect(Resource):
 
 api.add_resource(Connect, "/")
 api.add_resource(Upload, "/upload", "/upload/<string:filename>")
-
 api.add_resource(Test, "/test")
 
 if __name__ == "__main__":
