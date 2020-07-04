@@ -1,0 +1,11 @@
+build:
+  docker:
+    web: Dockerfile
+    worker: Dockerfile
+run:
+  web:
+    command:
+      - gunicorn api:app
+  worker:
+    command:
+      - celery -A api.celery worker -l info -Q predict -c 10 --pool eventlet -n worker2@%h
