@@ -16,7 +16,7 @@ from celery_init import make_celery
 
 
 api_url = os.getenv("API_URL", default="http://api:5000")
-mongo_uri = os.getenv("MONGODB_URI", default="mongodb://mongodb:27017")
+mongo_uri = os.getenv("MONGODB_URI", default="mongodb://mongodb:27017/epsilon")
 celery_broker_url = os.getenv("CLOUDAMQP_URL", default="amqp://rabbitmq:5672")
 celery_result_backend = mongo_uri
 port = os.getenv("PORT", default=5000)
@@ -26,7 +26,7 @@ app.config.update(
     CELERY_BROKER_URL=celery_broker_url, CELERY_RESULT_BACKEND=celery_result_backend
 )
 celery = make_celery(app)
-app.config["MONGO_URI"] = "{}/epsilon".format(mongo_uri)
+app.config["MONGO_URI"] = mongo_uri
 CORS(app)
 mongo = PyMongo(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
