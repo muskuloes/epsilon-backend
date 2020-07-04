@@ -8,4 +8,4 @@ run:
       - gunicorn api:app
   worker:
     command:
-      - celery -A api.celery worker -l info -Q predict -c 10 --pool eventlet -n worker2@%h
+      - celery -A api.celery worker -l info -Q predict -c 4 --pool eventlet -n worker2@%h
