@@ -24,6 +24,9 @@ numpy="==1.18.4"
 Pillow="==7.1.2"
 scikit-image="==0.16.2"
 scipy="==1.4.1"
+celery = "*"
+requests = "==2.24.0"
+ipython = "*"
 
 [requires]
 python_version = "3.7"

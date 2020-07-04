@@ -1,23 +1,47 @@
+from bson.objectid import ObjectId
 import os
+import pickle
+import requests
 import uuid
+import zlib
 
 from flask import Flask, request
 from flask_restful import Resource, Api
 from flask_socketio import SocketIO, emit
 from flask_pymongo import PyMongo
-
 from flask_cors import CORS
 
+from model import detect
+from celery_init import make_celery
+
+
+api_url = os.getenv("API_URL", default="http://api:5000")
+mongo_uri = os.getenv("MONGODB_URI", default="mongodb://mongodb:27017")
+celery_broker_url = os.getenv("CLOUDAMQP_URL", default="amqp://rabbitmq:5672")
+celery_result_backend = mongo_uri
+port = os.getenv("PORT", default=5000)
+
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.getenv(
-    "MONGODB_URI", default="mongodb://localhost:27017/hca"
+app.config.update(
+    CELERY_BROKER_URL=celery_broker_url, CELERY_RESULT_BACKEND=celery_result_backend
 )
+celery = make_celery(app)
+app.config["MONGO_URI"] = "{}/epsilon".format(mongo_uri)
 CORS(app)
 mongo = PyMongo(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-
-port = os.getenv("PORT", default=5000)
 api = Api(app)
+
+
+@celery.task(name="predict")
+def predict(id, filename):
+    file = requests.get("{}/upload/{}".format(api_url, filename))
+    masks = detect(file.content)
+    # compress masks
+    compressed_masks = zlib.compress(pickle.dumps(masks))
+    mongo.db.imageData.update_one(
+        {"_id": ObjectId(id)}, {"$set": {"masks": compressed_masks}}, upsert=False
+    )
 
 
 class Test(Resource):
@@ -34,11 +58,13 @@ class Upload(Resource):
         files = request.files
         data = []
         for _, file in files.items(multi=True):
-            filename = "{}".format(uuid.uuid4())
+            file_extension = file.filename.split(".")[-1]
+            filename = "{}.{}".format(uuid.uuid4(), file_extension)
             mongo.save_file(filename, file)
-            # build image data from tensorflow model
             imageData = {"name": filename}
             id = mongo.db.imageData.insert_one(imageData).inserted_id
+            # predict from tensorflow model
+            predict.apply_async(queue="predict", args=(str(id), filename))
             data.append({"id": str(id), "name": filename})
 
         socketio.emit("updated files", data, broadcast=True)

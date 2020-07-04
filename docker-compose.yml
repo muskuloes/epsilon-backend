@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  worker:
+    build: .
+    command:
+      [
+        "celery",
+        "-A",
+        "api.celery",
+        "worker",
+        "-l",
+        "info",
+        "-Q",
+        "predict",
+        "--concurrency",
+        "10",
+        "--pool",
+        "eventlet",
+        "-n",
+        "worker2@%h",
+      ]
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    expose:
+      - "15672"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    depends_on:
+      - mongodb
