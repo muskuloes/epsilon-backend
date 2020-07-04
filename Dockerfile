@@ -12,4 +12,4 @@ RUN pipenv install --system --deploy
 
 EXPOSE 5000
 
-ENTRYPOINT ["python", "api.py"]
+CMD ["python", "api.py"]
