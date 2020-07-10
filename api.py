@@ -1,9 +1,7 @@
 from bson.objectid import ObjectId
 import os
-import pickle
 import requests
 import uuid
-import zlib
 
 from flask import Flask, request
 from flask_restful import Resource, Api
@@ -36,11 +34,9 @@ api = Api(app)
 @celery.task(name="predict")
 def predict(id, filename):
     file = requests.get("{}/upload/{}".format(api_url, filename))
-    masks = detect(file.content)
-    # compress masks
-    compressed_masks = zlib.compress(pickle.dumps(masks))
+    preds = detect(file.content)
     mongo.db.imageData.update_one(
-        {"_id": ObjectId(id)}, {"$set": {"masks": compressed_masks}}, upsert=False
+        {"_id": ObjectId(id)}, {"$set": {"preds": preds}}, upsert=False
     )
 
 

@@ -2499,7 +2499,7 @@ class MaskRCNN():
         full_masks = np.stack(full_masks, axis=-1)\
             if full_masks else np.empty(original_image_shape[:2] + (0,))
 
-        return boxes.tolist(), class_ids.tolist(), scores.tolist(), full_masks.tolist()
+        return boxes, class_ids, scores, full_masks
 
     def detect(self, images, verbose=0):
         """Runs the detection pipeline.
