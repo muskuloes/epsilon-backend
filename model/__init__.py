@@ -1,6 +1,7 @@
 import sys
 import cv2
 import itertools
+import json
 import keras
 import numpy as np
 import requests
@@ -50,6 +51,10 @@ model_path = "model/weights.h5"
 # Load trained weights
 print("Loading weights from ", model_path)
 model.load_weights(model_path, by_name=True)
+
+with open("model/label_descriptions.json", "r") as file:
+    label_desc = json.load(file)
+categories = label_desc["categories"]
 
 
 def refine_masks(masks, rois):
@@ -103,6 +108,14 @@ def detect(file):
         if k == "masks":
             masks = predictions["masks"][:, :, 0].ravel(order="F")
             predictions["masks"] = rle_to_string(to_rle(masks))
+
+        elif k == "class_ids":
+            predictions["class_ids"] = [
+                c["name"]
+                for class_id in predictions["class_ids"]
+                for c in categories
+                if c["id"] == class_id
+            ]
         else:
             predictions[k] = v.tolist()
     return predictions
@@ -117,5 +130,13 @@ def detect(file):
 #  for k, v in r.items():
 #  if k == "masks":
 #  continue
+#  elif k == "class_ids":
+#  r["class_ids"] = [
+#  t["name"]
+#  for class_id in r["class_ids"]
+#  for t in categories
+#  if t["id"] == class_id
+#  ]
+#  else:
 #  r[k] = v.tolist()
 #  print(r)

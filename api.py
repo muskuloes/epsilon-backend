@@ -1,4 +1,5 @@
 from bson.objectid import ObjectId
+from bson.json_util import dumps
 import os
 import requests
 import uuid
@@ -57,7 +58,7 @@ class Upload(Resource):
             file_extension = file.filename.split(".")[-1]
             filename = "{}.{}".format(uuid.uuid4(), file_extension)
             mongo.save_file(filename, file)
-            imageData = {"name": filename}
+            imageData = {"name": filename, "preds": {}}
             id = mongo.db.imageData.insert_one(imageData).inserted_id
             # predict from tensorflow model
             predict.apply_async(queue="predict", args=(str(id), filename))
@@ -65,6 +66,14 @@ class Upload(Resource):
 
         socketio.emit("updated files", data, broadcast=True)
         return {"data": data}
+
+
+class Prediction(Resource):
+    def get(self, filename):
+        while True:
+            data = mongo.db.imageData.find_one({"name": filename}, {"_id": 0})
+            if data["preds"]:
+                return {"data": dumps(data)}
 
 
 class Connect(Resource):
@@ -76,6 +85,7 @@ class Connect(Resource):
 
 
 api.add_resource(Connect, "/")
+api.add_resource(Prediction, "/predictions/<string:filename>")
 api.add_resource(Upload, "/upload", "/upload/<string:filename>")
 api.add_resource(Test, "/test")
 
