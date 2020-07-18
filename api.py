@@ -46,6 +46,12 @@ class Test(Resource):
         return {"Team": "Unicorn"}
 
 
+class Search(Resource):
+    def get(self, term):
+        data = mongo.db.imageData.find({"preds.class_ids": term})
+        return {"data": dumps(data)}
+
+
 class Upload(Resource):
     def get(self, filename):
         return mongo.send_file(filename)
@@ -87,6 +93,7 @@ class Connect(Resource):
 api.add_resource(Connect, "/")
 api.add_resource(Prediction, "/predictions/<string:filename>")
 api.add_resource(Upload, "/upload", "/upload/<string:filename>")
+api.add_resource(Search, "/search/<string:term>")
 api.add_resource(Test, "/test")
 
 if __name__ == "__main__":

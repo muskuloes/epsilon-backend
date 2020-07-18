@@ -46,7 +46,7 @@ model = modellib.MaskRCNN(
 
 # Get path to saved weights
 # Either set a specific path or find last trained weights
-model_path = "model/weights.h5"
+model_path = "model/mask_rcnn_fashion_heads_cv0.h5"
 
 # Load trained weights
 print("Loading weights from ", model_path)
@@ -114,7 +114,7 @@ def detect(file):
                 c["name"]
                 for class_id in predictions["class_ids"]
                 for c in categories
-                if c["id"] == class_id
+                if c["id"] == class_id - 1
             ]
         else:
             predictions[k] = v.tolist()
