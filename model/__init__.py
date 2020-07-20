@@ -150,8 +150,11 @@ def detect(file):
     ]
     for k, v in predictions.items():
         if k == "masks":
-            masks = predictions[k][:, :, 0].ravel(order="F")
-            predictions[k] = rle_to_string(to_rle(masks))
+            if predictions[k].shape[-1] > 0:
+                masks = predictions[k][:, :, 0].ravel(order="F")
+                predictions[k] = rle_to_string(to_rle(masks))
+            else:
+                predictions[k] = ""
 
         elif k == "class_ids":
             predictions[k] = [
