@@ -1,7 +1,3 @@
-# Online Deployment
-
-- The API is deployed on Heroku: https://hca-backend.herokuapp.com/test
-
 # Development Setup
 
 - Install [pipenv](https://pypi.org/project/pipenv/)
