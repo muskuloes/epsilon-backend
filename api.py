@@ -78,7 +78,7 @@ class Prediction(Resource):
     def get(self, filename):
         while True:
             data = mongo.db.imageData.find_one({"name": filename}, {"_id": 0})
-            if data["preds"]:
+            if data and data["preds"]:
                 return {"data": dumps(data)}
 
 
