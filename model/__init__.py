@@ -46,7 +46,7 @@ model = modellib.MaskRCNN(
 
 # Get path to saved weights
 # Either set a specific path or find last trained weights
-model_path = "model/mask_rcnn_fashion_heads_cv0.h5"
+model_path = "model/weights2.h5"
 
 # Load trained weights
 print("Loading weights from ", model_path)
@@ -99,33 +99,85 @@ def rle_to_string(runs):
     return " ".join(str(x) for x in runs)
 
 
+def image_resize(image, inter=cv2.INTER_AREA):
+    # initialize the dimensions of the image to be resized and
+    # grab the image size
+    dim = None
+    width = None
+    height = None
+    (h, w) = image.shape[:2]
+    if max(h, w) > 1024:
+        if h > w:
+            height = 1024
+        else:
+            width = 1024
+
+    # if both the width and height are None, then return the
+    # original image
+    if width is None and height is None:
+        return image
+
+    # check to see if the width is None
+    if width is None:
+        # calculate the ratio of the height and construct the
+        # dimensions
+        r = height / float(h)
+        dim = (int(w * r), height)
+
+    # otherwise, the height is None
+    else:
+        # calculate the ratio of the width and construct the
+        # dimensions
+        r = width / float(w)
+        dim = (width, int(h * r))
+
+    # resize the image
+    resized = cv2.resize(image, dim, interpolation=inter)
+
+    # return the resized image
+    return resized
+
+
 def detect(file):
     img_array = np.array(bytearray(file), dtype=np.uint8)
-    img = cv2.imdecode(img_array, -1)
+    img = cv2.cvtColor(cv2.imdecode(img_array, -1), cv2.COLOR_BGR2RGB)
+
     results = model.detect([img])
     predictions = results[0]
+    predictions["bbox"] = [
+        cv2.boundingRect(np.matrix(predictions["masks"][:, :, j] * 1, dtype=np.uint8))
+        for j in range(predictions["masks"].shape[-1])
+    ]
     for k, v in predictions.items():
         if k == "masks":
-            masks = predictions["masks"][:, :, 0].ravel(order="F")
-            predictions["masks"] = rle_to_string(to_rle(masks))
+            masks = predictions[k][:, :, 0].ravel(order="F")
+            predictions[k] = rle_to_string(to_rle(masks))
 
         elif k == "class_ids":
-            predictions["class_ids"] = [
+            predictions[k] = [
                 c["name"]
                 for class_id in predictions["class_ids"]
                 for c in categories
                 if c["id"] == class_id - 1
             ]
+        elif k == "bbox":
+            continue
         else:
             predictions[k] = v.tolist()
     return predictions
 
 
-#  img = cv2.imread("model/test.jpg")
+#  img = cv2.cvtColor(image_resize(cv2.imread("model/test.jpg")), cv2.COLOR_BGR2RGB)
 #  results = model.detect([img])
 #  r = results[0]
 #  mask = r["masks"][:, :, 0].ravel(order="F")
 #  rle = to_rle(mask)
+#  for j in range(r["masks"].shape[-1]):
+#  print(
+#  "\nbounding box: {}\n".format(
+#  cv2.boundingRect(np.matrix(r["masks"][:, :, j] * 1, dtype=np.uint8))
+#  )
+#  )
 #  r["masks"] = rle
 #  for k, v in r.items():
 #  if k == "masks":
@@ -135,7 +187,7 @@ def detect(file):
 #  t["name"]
 #  for class_id in r["class_ids"]
 #  for t in categories
-#  if t["id"] == class_id
+#  if t["id"] == class_id - 1
 #  ]
 #  else:
 #  r[k] = v.tolist()
