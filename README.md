@@ -8,7 +8,7 @@
 pipenv install
 ```
 
-### Start the api:
+### Start the API:
 
 - Using [docker-compose](https://docs.docker.com/compose/):
 
